@@ -4,13 +4,11 @@
 </br>Your own classifier is a ~.pkl file that loads the previously mentioned pre-trained model ('[20170511-185253.pb](https://drive.google.com/file/d/0B5MzpY9kBtDVOTVnU3NIaUdySFE/edit)') and embeds the face for each person.<br/>All of these can be obtained by running 'python Make_classifier.py'.<br/> - this actually trains the model and exports the new weights .pkl
 * 3/ Last STEP, We start the ReID by loading our own 'models/six20180522.pkl' obtained above and then open the sensor and start recognition.
 </br> (Note that, look carefully at the paths of files and folders in all .py)
-## Result
-<img src="https://github.com/bearsprogrammer/real-time-deep-face-recogniton/blob/master/realtime_demo_pic.jpg" width="60%">
 
 # real-time-deep-face-recogniton
 
 Real-time face recognition program using Google's facenet.
-* [youtube video](https://www.youtube.com/watch?v=T6czH6DLhC4)
+
 ## Inspiration
 * forked from [BearsProgrammer](https://github.com/bearsprogrammer/real-time-deep-face-recognition)
 * [OpenFace](https://github.com/cmusatyalab/openface)

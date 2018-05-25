@@ -2,7 +2,7 @@
 * 1/ First STEP, we need align face data. So, if you run 'python Make_aligndata.py' first, the face data which is here 'data/med_soh' is aligned in the output folder and it will be saved here 'data/med_soh_align'
 * 2/ Second STEP, we need to create our own classifier with the face data we created. <br/>(In the case of me, I had a high recognition rate when I made 30 pictures for each person.)
 </br>Your own classifier is a ~.pkl file that loads the previously mentioned pre-trained model ('[20170511-185253.pb](https://drive.google.com/file/d/0B5MzpY9kBtDVOTVnU3NIaUdySFE/edit)') and embeds the face for each person.<br/>All of these can be obtained by running 'python Make_classifier.py'.<br/> - this actually trains the model and exports the new weights .pkl
-* 3/ Last STEP, We start the ReID by loading our own 'models/six20180522.pkl' obtained above and then open the sensor and start recognition.
+* 3/ Last STEP, We start the ReID by loading our own 'models/six20180522.pkl' obtained above and then open the sensor and start recognition. ! This step doesn't need anymore the stored images in data folder.
 </br> (Note that, look carefully at the paths of files and folders in all .py)
 
 # real-time-deep-face-recogniton

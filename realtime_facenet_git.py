@@ -20,12 +20,15 @@ import pickle
 from sklearn.svm import SVC
 from sklearn.externals import joblib
 
+import pdb
+
 print('Creating networks and loading parameters')
 with tf.Graph().as_default():
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.6)
-    sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+    # sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
+    sess = tf.Session(config=tf.ConfigProto(device_count={'GPU': 0}))
     with sess.as_default():
-        pnet, rnet, onet = detect_face.create_mtcnn(sess, './Path to det1.npy,..')
+        pnet, rnet, onet = detect_face.create_mtcnn(sess, '/home/sohaib/Desktop/Tools/real-time-deep-face-recognition/det_facenet')
 
         minsize = 20  # minimum size of face
         threshold = [0.6, 0.7, 0.7]  # three steps's threshold
@@ -36,10 +39,17 @@ with tf.Graph().as_default():
         image_size = 182
         input_image_size = 160
 
-        HumanNames = ['Human_a','Human_b','Human_c','...','Human_h']    #train human name
+        # HumanNames = ['Kevin', 'Med', 'Sohaib', 'Alessa', 'Kaori', 'Nicola']    # train human name
+        # HumanNames = sorted(HumanNames)
+        # HumanNames = ['Kaori', 'Nicola']
+        # HumanNames = ['f_h1', 'f_j1', 'Kaori', 'Nicola']
+        # facesF_j2  facesF_k2  facesF_n2  facesF_t1
+
+        HumanNames = ['facesF_j2', 'facesF_k2', 'facesF_n2', 'facesF_t1']
+        HumanNames = sorted(HumanNames)
 
         print('Loading feature extraction model')
-        modeldir = '/..Path to pre-trained model../20170512-110547/20170512-110547.pb'
+        modeldir = '/home/sohaib/Desktop/Tools/real-time-deep-face-recognition/models/20170512-110547/20170512-110547.pb'
         facenet.load_model(modeldir)
 
         images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -47,7 +57,7 @@ with tf.Graph().as_default():
         phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
         embedding_size = embeddings.get_shape()[1]
 
-        classifier_filename = '/..Path to classifier model../my_classifier.pkl'
+        classifier_filename = '/home/sohaib/Desktop/Tools/real-time-deep-face-recognition/models/six20180522.pkl'
         classifier_filename_exp = os.path.expanduser(classifier_filename)
         with open(classifier_filename_exp, 'rb') as infile:
             (model, class_names) = pickle.load(infile)
@@ -65,20 +75,21 @@ with tf.Graph().as_default():
         while True:
             ret, frame = video_capture.read()
 
-            frame = cv2.resize(frame, (0,0), fx=0.5, fy=0.5)    #resize frame (optional)
+            frame = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)    # resize frame (optional)
 
             curTime = time.time()    # calc fps
             timeF = frame_interval
 
-            if (c % timeF == 0):
+            if c % timeF == 0:
                 find_results = []
 
                 if frame.ndim == 2:
                     frame = facenet.to_rgb(frame)
                 frame = frame[:, :, 0:3]
+
                 bounding_boxes, _ = detect_face.detect_face(frame, minsize, pnet, rnet, onet, threshold, factor)
                 nrof_faces = bounding_boxes.shape[0]
-                print('Detected_FaceNum: %d' % nrof_faces)
+                # print('Detected_FaceNum: %d' % nrof_faces)
 
                 if nrof_faces > 0:
                     det = bounding_boxes[:, 0:4]
@@ -103,38 +114,43 @@ with tf.Graph().as_default():
                             continue
 
                         cropped.append(frame[bb[i][1]:bb[i][3], bb[i][0]:bb[i][2], :])
-                        cropped[0] = facenet.flip(cropped[0], False)
-                        scaled.append(misc.imresize(cropped[0], (image_size, image_size), interp='bilinear'))
-                        scaled[0] = cv2.resize(scaled[0], (input_image_size,input_image_size),
+                        cropped[i] = facenet.flip(cropped[i], False)
+                        scaled.append(misc.imresize(cropped[i], (image_size, image_size), interp='bilinear'))
+                        scaled[i] = cv2.resize(scaled[i], (input_image_size, input_image_size),
                                                interpolation=cv2.INTER_CUBIC)
-                        scaled[0] = facenet.prewhiten(scaled[0])
-                        scaled_reshape.append(scaled[0].reshape(-1,input_image_size,input_image_size,3))
-                        feed_dict = {images_placeholder: scaled_reshape[0], phase_train_placeholder: False}
+                        scaled[i] = facenet.prewhiten(scaled[i])
+                        scaled_reshape.append(scaled[i].reshape(-1, input_image_size, input_image_size, 3))
+                        feed_dict = {images_placeholder: scaled_reshape[i], phase_train_placeholder: False}
                         emb_array[0, :] = sess.run(embeddings, feed_dict=feed_dict)
                         predictions = model.predict_proba(emb_array)
                         best_class_indices = np.argmax(predictions, axis=1)
                         best_class_probabilities = predictions[np.arange(len(best_class_indices)), best_class_indices]
-                        cv2.rectangle(frame, (bb[i][0], bb[i][1]), (bb[i][2], bb[i][3]), (0, 255, 0), 2)    #boxing face
+                        cv2.rectangle(frame, (bb[i][0], bb[i][1]), (bb[i][2], bb[i][3]), (0, 255, 0), 2)    # boxing face
 
-                        #plot result idx under box
+                        # plot result idx under box
                         text_x = bb[i][0]
                         text_y = bb[i][3] + 20
-                        # print('result: ', best_class_indices[0])
-                        for H_i in HumanNames:
-                            if HumanNames[best_class_indices[0]] == H_i:
-                                result_names = HumanNames[best_class_indices[0]]
-                                cv2.putText(frame, result_names, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX_SMALL,
-                                            1, (0, 0, 255), thickness=1, lineType=2)
+                        print('Result: ', best_class_indices[0], ' Name: ', HumanNames[best_class_indices[0]], 'best class probab', int(best_class_probabilities*100)) # not useful in this case (only 2 people) cause the other one is 100 - best_class, ' scores: ', predictions )
+                        best_probab = int(best_class_probabilities*100)
+                        result_names = HumanNames[best_class_indices[0]] + ' ' + str(best_probab)
+                        cv2.putText(frame, result_names, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                                    1, (0, 0, 255), thickness=1, lineType=2)
+
+                        # for H_i in HumanNames:
+                        #     if HumanNames[best_class_indices[0]] == H_i:
+                        #         result_names = HumanNames[best_class_indices[0]]
+                        #         cv2.putText(frame, result_names, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                        #                     1, (0, 0, 255), thickness=1, lineType=2)
                 else:
                     print('Unable to align')
 
             sec = curTime - prevTime
             prevTime = curTime
             fps = 1 / (sec)
-            str = 'FPS: %2.3f' % fps
+            strr = 'FPS: %2.3f' % fps
             text_fps_x = len(frame[0]) - 150
             text_fps_y = 20
-            cv2.putText(frame, str, (text_fps_x, text_fps_y),
+            cv2.putText(frame, strr, (text_fps_x, text_fps_y),
                         cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 0), thickness=1, lineType=2)
             # c+=1
             cv2.imshow('Video', frame)

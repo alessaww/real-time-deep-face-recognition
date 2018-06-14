@@ -28,7 +28,7 @@ with tf.Graph().as_default():
     # sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options, log_device_placement=False))
     sess = tf.Session(config=tf.ConfigProto(device_count={'GPU': 0}))
     with sess.as_default():
-        pnet, rnet, onet = detect_face.create_mtcnn(sess, '/home/sohaib/Desktop/Tools/real-time-deep-face-recognition/det_facenet')
+        pnet, rnet, onet = detect_face.create_mtcnn(sess, 'det_facenet')
 
         minsize = 20  # minimum size of face
         threshold = [0.6, 0.7, 0.7]  # three steps's threshold
@@ -45,11 +45,11 @@ with tf.Graph().as_default():
         # HumanNames = ['f_h1', 'f_j1', 'Kaori', 'Nicola']
         # facesF_j2  facesF_k2  facesF_n2  facesF_t1
 
-        HumanNames = ['facesF_j2', 'facesF_k2', 'facesF_n2', 'facesF_t1']
+        HumanNames = ['kaori', 'matei', 'nicola', 'sohaib', 'viktor']
         HumanNames = sorted(HumanNames)
 
         print('Loading feature extraction model')
-        modeldir = '/home/sohaib/Desktop/Tools/real-time-deep-face-recognition/models/20170512-110547/20170512-110547.pb'
+        modeldir = 'models/20170512-110547/20170512-110547.pb'
         facenet.load_model(modeldir)
 
         images_placeholder = tf.get_default_graph().get_tensor_by_name("input:0")
@@ -57,7 +57,7 @@ with tf.Graph().as_default():
         phase_train_placeholder = tf.get_default_graph().get_tensor_by_name("phase_train:0")
         embedding_size = embeddings.get_shape()[1]
 
-        classifier_filename = '/home/sohaib/Desktop/Tools/real-time-deep-face-recognition/models/six20180522.pkl'
+        classifier_filename = 'models/four20180614.pkl'
         classifier_filename_exp = os.path.expanduser(classifier_filename)
         with open(classifier_filename_exp, 'rb') as infile:
             (model, class_names) = pickle.load(infile)
@@ -112,15 +112,17 @@ with tf.Graph().as_default():
                         if bb[i][0] <= 0 or bb[i][1] <= 0 or bb[i][2] >= len(frame[0]) or bb[i][3] >= len(frame):
                             print('face is inner of range!')
                             continue
-
+                        
                         cropped.append(frame[bb[i][1]:bb[i][3], bb[i][0]:bb[i][2], :])
-                        cropped[i] = facenet.flip(cropped[i], False)
-                        scaled.append(misc.imresize(cropped[i], (image_size, image_size), interp='bilinear'))
-                        scaled[i] = cv2.resize(scaled[i], (input_image_size, input_image_size),
+                        z = len(cropped) - 1
+                        cropped[z] = facenet.flip(cropped[z], False)
+                        
+                        scaled.append(misc.imresize(cropped[z], (image_size, image_size), interp='bilinear'))
+                        scaled[z] = cv2.resize(scaled[z], (input_image_size, input_image_size),
                                                interpolation=cv2.INTER_CUBIC)
-                        scaled[i] = facenet.prewhiten(scaled[i])
-                        scaled_reshape.append(scaled[i].reshape(-1, input_image_size, input_image_size, 3))
-                        feed_dict = {images_placeholder: scaled_reshape[i], phase_train_placeholder: False}
+                        scaled[z] = facenet.prewhiten(scaled[z])
+                        scaled_reshape.append(scaled[z].reshape(-1, input_image_size, input_image_size, 3))
+                        feed_dict = {images_placeholder: scaled_reshape[z], phase_train_placeholder: False}
                         emb_array[0, :] = sess.run(embeddings, feed_dict=feed_dict)
                         predictions = model.predict_proba(emb_array)
                         best_class_indices = np.argmax(predictions, axis=1)

@@ -43,7 +43,7 @@ with tf.Graph().as_default():
         image_size = 182
         input_image_size = 160
 
-        HumanNames = ['kaori', 'matei', 'nicola', 'sohaib']
+        HumanNames = ['aless', 'brad', 'angelina']
         HumanNames = sorted(HumanNames)
 
         print('Loading feature extraction model')

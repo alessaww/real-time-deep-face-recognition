@@ -11,6 +11,8 @@ import numpy as np
 import facenet
 import detect_face
 import random
+import imageio
+from skimage.transform import resize
 from time import sleep
 
 output_dir_path = 'data/med_soh'
@@ -53,7 +55,7 @@ with open(bounding_boxes_filename, "w") as text_file:
             print(image_path)
             if not os.path.exists(output_filename):
                 try:
-                    img = misc.imread(image_path)
+                    img = imageio.imread(image_path)
                     print('read data dimension: ', img.ndim)
                 except (IOError, ValueError, IndexError) as e:
                     errorMessage = '{}: {}'.format(image_path, e)
@@ -94,9 +96,12 @@ with open(bounding_boxes_filename, "w") as text_file:
                         cropped_temp = img[bb_temp[1]:bb_temp[3], bb_temp[0]:bb_temp[2], :]
                         # import pdb
                         # pdb.set_trace()
-                        scaled_temp = misc.imresize(cropped_temp, (image_size, image_size), interp='bilinear')
+                        # scaled_temp = np.array(Image.fromarray(cropped_temp).resize([image_size, image_size]), PIL.Image.BILINEAR)
+                        # scaled_temp = misc.imresize(cropped_temp, (image_size, image_size), interp='bilinear')
+                        scaled_temp =resize(cropped_temp, (image_size, image_size))
                         nrof_successfully_aligned += 1
-                        misc.imsave(output_filename, scaled_temp)
+                        imageio.imwrite(output_filename, scaled_temp)
+                        #misc.imsave(output_filename, scaled_temp)
                         text_file.write('%s %d %d %d %d\n' % (output_filename, bb_temp[0], bb_temp[1], bb_temp[2], bb_temp[3]))
                     else:
                         print('Unable to align "%s"' % image_path)

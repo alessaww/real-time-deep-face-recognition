@@ -19,6 +19,7 @@ import math
 import pickle
 from sklearn.svm import SVC
 from sklearn.externals import joblib
+from skimage.transform import resize
 
 import pdb
 
@@ -34,7 +35,7 @@ with tf.Graph().as_default():
         threshold = [0.6, 0.7, 0.7]  # three steps's threshold
         factor = 0.709  # scale factor
         margin = 44
-        frame_interval = 3
+        frame_interval = 30
         batch_size = 1000
         image_size = 182
         input_image_size = 160
@@ -116,8 +117,8 @@ with tf.Graph().as_default():
                         cropped.append(frame[bb[i][1]:bb[i][3], bb[i][0]:bb[i][2], :])
                         z = len(cropped) - 1
                         cropped[z] = facenet.flip(cropped[z], False)
-                        
-                        scaled.append(misc.imresize(cropped[z], (image_size, image_size), interp='bilinear'))
+                        scaled.append(resize(cropped[z], (image_size, image_size)))                     
+                        # scaled.append(misc.imresize(cropped[z], (image_size, image_size), interp='bilinear'))
                         scaled[z] = cv2.resize(scaled[z], (input_image_size, input_image_size),
                                                interpolation=cv2.INTER_CUBIC)
                         scaled[z] = facenet.prewhiten(scaled[z])
@@ -154,7 +155,7 @@ with tf.Graph().as_default():
             text_fps_y = 20
             cv2.putText(frame, strr, (text_fps_x, text_fps_y),
                         cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 0, 0), thickness=1, lineType=2)
-            # c+=1
+            c= c + 1
             cv2.imshow('Video', frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):

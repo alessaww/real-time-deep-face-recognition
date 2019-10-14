@@ -82,7 +82,14 @@ class Network(object):
         session: The current TensorFlow session
         ignore_missing: If true, serialized weights for missing layers are ignored.
         '''
+        # save np.load
+        np_load_old = np.load
+        
+        # modify the default parameters of np.load
+        np.load = lambda *a,**k: np_load_old(*a, allow_pickle=True, **k)
         data_dict = np.load(data_path, encoding='latin1').item() #pylint: disable=no-member
+        # restore np.load for future normal usage
+        np.load = np_load_old
 
         for op_name in data_dict:
             with tf.variable_scope(op_name, reuse=True):

@@ -1,0 +1,9 @@
+data/med_soh/aless/aless3.png 96 51 400 450
+data/med_soh/aless/aless1.png 68 13 160 130
+data/med_soh/aless/aless2.png 33 9 155 169
+data/med_soh/aless/aless4.png 17 46 165 247
+data/med_soh/angelina/angelina1.png 39 64 271 366
+data/med_soh/angelina/angelina2.png 5 31 257 377
+data/med_soh/brad/brad3.png 12 25 120 178
+data/med_soh/brad/brad1.png 28 43 188 267
+data/med_soh/brad/brad2.png 17 49 145 224
